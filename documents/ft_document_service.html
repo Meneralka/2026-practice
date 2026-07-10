@@ -1,0 +1,573 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<style>
+  @page {
+    size: A4;
+    margin: 16mm 12mm 18mm 12mm;
+    @bottom-center {
+      content: "Перечень ФТ document-service · ТЗ-08 · стр. " counter(page) " из " counter(pages);
+      font-family: "DejaVu Sans"; font-size: 7.5pt; color: #6b7280;
+    }
+  }
+  * { box-sizing: border-box; }
+  body {
+    font-family: "DejaVu Sans", sans-serif;
+    font-size: 8.4pt;
+    color: #1f2937;
+    line-height: 1.34;
+  }
+  h1 { font-size: 16pt; margin: 0 0 2mm 0; color: #0f172a; }
+  h2 {
+    font-size: 11pt; color: #0f172a; margin: 6mm 0 2mm 0;
+    padding-bottom: 1mm; border-bottom: 1.4pt solid #1e3a5f;
+  }
+  h3 { font-size: 9pt; margin: 4mm 0 1.5mm 0; color: #1e3a5f; }
+  p { margin: 1.5mm 0; }
+  .sub { color: #64748b; font-size: 8pt; }
+  .meta {
+    width: 100%; border-collapse: collapse; margin: 3mm 0 1mm 0;
+    font-size: 8pt;
+  }
+  .meta td { border: 0.5pt solid #cbd5e1; padding: 1.4mm 2mm; vertical-align: top; }
+  .meta td.k { background: #f1f5f9; font-weight: bold; width: 34%; color: #334155; }
+
+  table.grid { width: 100%; border-collapse: collapse; margin: 1.5mm 0 3mm 0; }
+  table.grid th {
+    background: #1e3a5f; color: #fff; font-size: 7.6pt; font-weight: bold;
+    padding: 1.6mm 1.6mm; text-align: left; border: 0.5pt solid #1e3a5f;
+    vertical-align: middle;
+  }
+  table.grid td {
+    border: 0.5pt solid #d1d5db; padding: 1.4mm 1.6mm; vertical-align: top;
+    font-size: 7.8pt;
+  }
+  table.grid tr:nth-child(even) td { background: #f8fafc; }
+  .grp td {
+    background: #dde6f0 !important; font-weight: bold; color: #12304f;
+    font-size: 8pt; padding: 1.6mm;
+  }
+  .id { font-weight: bold; color: #12304f; white-space: nowrap; }
+  .req { white-space: nowrap; font-size: 7.4pt; }
+  code, .mono { font-family: "DejaVu Sans Mono", monospace; font-size: 7pt; }
+
+  .badge { display: inline-block; padding: 0.3mm 1.4mm; border-radius: 2pt;
+    font-size: 6.8pt; font-weight: bold; white-space: nowrap; }
+  .must { background: #fee2e2; color: #991b1b; }
+  .should { background: #fef3c7; color: #92400e; }
+  .derived { background: #e0e7ff; color: #3730a3; }
+  .own-k { color: #0e7490; font-weight: bold; }
+  .own-a { color: #9333ea; font-weight: bold; }
+  .own-c { color: #334155; font-weight: bold; }
+
+  .legend span { margin-right: 4mm; font-size: 7.6pt; }
+  .note { background: #fffbeb; border-left: 2.5pt solid #f59e0b;
+    padding: 2mm 3mm; margin: 2mm 0; font-size: 7.9pt; }
+  ul { margin: 1.5mm 0; padding-left: 5mm; }
+  li { margin: 0.8mm 0; }
+  .cov td.reqid { font-weight: bold; color: #12304f; white-space: nowrap; }
+</style>
+</head>
+<body>
+
+<h1>Перечень функциональных требований к document-service</h1>
+<p class="sub">Декомпозиция функциональности модуля загрузки документов и ЭДО с привязкой к требованиям ТЗ-08 (REQ-08-001 … REQ-08-012). Источники: ТЗ-08 (v1.0) и «Проект ответа об уточнении интеграций document-service» (v0.1).</p>
+
+<table class="meta">
+  <tr><td class="k">Целевой сервис</td><td>document-service (Java 21, Spring Boot 3.x, Maven, PostgreSQL + JPA, Flyway, Kafka, RustFS/S3, OAuth2 JWT)</td></tr>
+  <tr><td class="k">Базовый документ</td><td>ТЗ-08-DOCUMENTS-EDO, разделы 5, 6, 7, 8, 10, 11</td></tr>
+  <tr><td class="k">Владельцы бэкенда</td><td>@koshak1030 — пакеты document/, delivery/ · @ArtemKvvs — пакеты link/, registry/, routing/, integration/</td></tr>
+  <tr><td class="k">Статус</td><td>Рабочий перечень для планирования и приёмки. Требования, помеченные «выводимое», реконструированы из доменной логики / проекта интеграций и подлежат подтверждению у стейкхолдера ТЗ до реализации.</td></tr>
+  <tr><td class="k">Срок реализации</td><td>до 16.08.2026</td></tr>
+</table>
+
+<h2>1. Условные обозначения</h2>
+<p class="legend">
+  <span><span class="badge must">MUST</span> — обязательное (по ТЗ)</span>
+  <span><span class="badge should">SHOULD</span> — желательное (по ТЗ)</span>
+  <span><span class="badge derived">выводимое</span> — не в таблице REQ, следует из разделов ТЗ / проекта интеграций</span>
+</p>
+<p class="legend">
+  <span><span class="own-k">К</span> — @koshak1030</span>
+  <span><span class="own-a">А</span> — @ArtemKvvs</span>
+  <span><span class="own-c">Об</span> — общий / инфраструктура (@Hqhzx), UI (@NITF1S)</span>
+</p>
+
+<h2>2. Перечень ФТ и сопоставление с REQ-08-XXX</h2>
+
+<table class="grid">
+  <thead>
+    <tr>
+      <th style="width:7%">ФТ</th>
+      <th style="width:31%">Функциональное требование</th>
+      <th style="width:12%">REQ-08</th>
+      <th style="width:7%">Пр-т</th>
+      <th style="width:9%">Влад./пакет</th>
+      <th style="width:34%">Критерий приёмки (уточнённый)</th>
+    </tr>
+  </thead>
+  <tbody>
+
+  <tr class="grp"><td colspan="6">Группа 1. Загрузка и приём файлов — пакет document/</td></tr>
+  <tr>
+    <td class="id">ФТ-01</td>
+    <td>Множественная загрузка файлов через API (multipart) и UI</td>
+    <td class="req">REQ-08-001</td>
+    <td><span class="badge must">MUST</span></td>
+    <td><span class="own-k">К</span> / document/</td>
+    <td>За одну операцию принимается несколько файлов; по каждому создаётся карточка/версия; результат по каждому файлу возвращается отдельно, ошибка одного не откатывает остальные.</td>
+  </tr>
+  <tr>
+    <td class="id">ФТ-02</td>
+    <td>Двухфазная загрузка: init (карточка загрузки, uploadId, параметры) → complete (фиксация версии)</td>
+    <td class="req">REQ-08-001</td>
+    <td><span class="badge must">MUST</span></td>
+    <td><span class="own-k">К</span> / document/</td>
+    <td>Endpoint uploads/init возвращает uploadId, documentId, target, maxSize, allowedMimeTypes; complete завершает загрузку и создаёт FileVersion.</td>
+  </tr>
+  <tr>
+    <td class="id">ФТ-03</td>
+    <td>Определение MIME/типа через Apache Tika и валидация по whitelist</td>
+    <td class="req">REQ-08-002</td>
+    <td><span class="badge must">MUST</span></td>
+    <td><span class="own-k">К</span> / document/</td>
+    <td>Тип определяется по содержимому (Tika), а не по расширению; файл вне whitelist отклоняется с кодом причины; факт — в аудите.</td>
+  </tr>
+  <tr>
+    <td class="id">ФТ-04</td>
+    <td>Валидация размера файла по лимиту</td>
+    <td class="req">REQ-08-002</td>
+    <td><span class="badge must">MUST</span></td>
+    <td><span class="own-k">К</span> / document/</td>
+    <td>Превышение maxSize отклоняется до сохранения в хранилище; сообщение пользователю функциональное, без техдеталей.</td>
+  </tr>
+  <tr>
+    <td class="id">ФТ-05</td>
+    <td>Расчёт SHA-256 и контроль целостности</td>
+    <td class="req">REQ-08-002<br>REQ-08-004</td>
+    <td><span class="badge must">MUST</span></td>
+    <td><span class="own-k">К</span> / document/</td>
+    <td>По каждой версии сохраняется sha256; повторная загрузка идентичного контента детектируется по хэшу.</td>
+  </tr>
+  <tr>
+    <td class="id">ФТ-06</td>
+    <td>Антивирусная проверка через ClamAV (clamd)</td>
+    <td class="req">REQ-08-002</td>
+    <td><span class="badge must">MUST</span></td>
+    <td><span class="own-k">К</span> / document/</td>
+    <td>Каждый файл проходит clamd; заражённый не публикуется и не принимается; результат (passed/failed, reasonCode) фиксируется.</td>
+  </tr>
+  <tr>
+    <td class="id">ФТ-07</td>
+    <td>Карантинная обработка при непрохождении проверки</td>
+    <td class="req">REQ-08-002<br><span class="badge derived">выводимое</span></td>
+    <td><span class="badge must">MUST</span></td>
+    <td><span class="own-k">К</span> / document/</td>
+    <td>Файл, не прошедший тех/АВ-проверку, остаётся в статусе «Черновик»/карантин, связь с бизнес-объектом и статус «На проверке» не устанавливаются.</td>
+  </tr>
+
+  <tr class="grp"><td colspan="6">Группа 2. Карточка документа и версии — пакет document/</td></tr>
+  <tr>
+    <td class="id">ФТ-08</td>
+    <td>Создание карточки документа (DocumentCard) с реквизитами</td>
+    <td class="req">REQ-08-003</td>
+    <td><span class="badge must">MUST</span></td>
+    <td><span class="own-k">К</span> / document/</td>
+    <td>Карточка содержит documentId, businessKey, documentType, status, versionNumber, actualFileVersionId, visibilityProfile; DTO отделены от сущностей.</td>
+  </tr>
+  <tr>
+    <td class="id">ФТ-09</td>
+    <td>Получение карточки по id</td>
+    <td class="req">REQ-08-003</td>
+    <td><span class="badge must">MUST</span></td>
+    <td><span class="own-k">К</span> / document/</td>
+    <td>GET по documentId возвращает карточку, актуальную версию, статус, связи, признаки видимости и аудит по правам.</td>
+  </tr>
+  <tr>
+    <td class="id">ФТ-10</td>
+    <td>Список карточек с фильтрами и пагинацией</td>
+    <td class="req">REQ-08-003</td>
+    <td><span class="badge must">MUST</span></td>
+    <td><span class="own-k">К</span> / document/</td>
+    <td>Фильтрация по businessKey, documentType, status, linkType, targetId, visibilityProfile; постраничная выдача.</td>
+  </tr>
+  <tr>
+    <td class="id">ФТ-11</td>
+    <td>Тип-специфичные реквизиты для 5 типов документов</td>
+    <td class="req">REQ-08-003<br><span class="badge derived">выводимое</span></td>
+    <td><span class="badge must">MUST</span></td>
+    <td><span class="own-k">К</span> / document/</td>
+    <td>Реквизиты типов (REQUEST_MATERIAL, EXPERT_CARD, EXPERT_CONCLUSION, COMPARATIVE_PROTOCOL, SERVICE_RESOLUTION) отображены на поля сущности. <b>Разрыв в MZD-5: маппинг реквизитов к полям не выполнен — требует проработки.</b></td>
+  </tr>
+  <tr>
+    <td class="id">ФТ-12</td>
+    <td>Версионирование без перезаписи: каждая загрузка — новая FileVersion</td>
+    <td class="req">REQ-08-004</td>
+    <td><span class="badge must">MUST</span></td>
+    <td><span class="own-k">К</span> / document/</td>
+    <td>Новая загрузка создаёт версию с versionNumber и previousVersionId; старый объект в хранилище не перезаписывается.</td>
+  </tr>
+  <tr>
+    <td class="id">ФТ-13</td>
+    <td>Указание актуальной версии и её статуса</td>
+    <td class="req">REQ-08-004</td>
+    <td><span class="badge must">MUST</span></td>
+    <td><span class="own-k">К</span> / document/</td>
+    <td>actualFileVersionId однозначно указывает текущую версию. <b>Разрыв MZD-5: FileVersion.status без enum, пересечение с checkResult/isCurrent — развести семантику.</b></td>
+  </tr>
+  <tr>
+    <td class="id">ФТ-14</td>
+    <td>История версий документа</td>
+    <td class="req">REQ-08-004</td>
+    <td><span class="badge must">MUST</span></td>
+    <td><span class="own-k">К</span> / document/</td>
+    <td>Доступен список всех версий с датами, авторами, хэшами; старые версии читаемы по правам.</td>
+  </tr>
+
+  <tr class="grp"><td colspan="6">Группа 3. Хранилище, ссылки, предпросмотр — пакет document/</td></tr>
+  <tr>
+    <td class="id">ФТ-15</td>
+    <td>Сохранение файла в объектное хранилище (RustFS/Minio через AWS SDK v2, S3 API)</td>
+    <td class="req">REQ-08-001<br><span class="badge derived">выводимое</span></td>
+    <td><span class="badge must">MUST</span></td>
+    <td><span class="own-k">К</span> / document/</td>
+    <td>Файл кладётся по политике bucket/prefix; в FileVersion сохраняются objectStorageRef, storageBucket, storageKeyHash.</td>
+  </tr>
+  <tr>
+    <td class="id">ФТ-16</td>
+    <td>Защищённые временные (presigned) ссылки на просмотр/скачивание с TTL</td>
+    <td class="req">REQ-08-009</td>
+    <td><span class="badge should">SHOULD</span></td>
+    <td><span class="own-k">К</span> / document/</td>
+    <td>createSecureLink(documentId, action=VIEW|DOWNLOAD, ttl) возвращает ссылку с expiresAt; действие фиксируется.</td>
+  </tr>
+  <tr>
+    <td class="id">ФТ-17</td>
+    <td>Предпросмотр файла в браузере</td>
+    <td class="req">REQ-08-008</td>
+    <td><span class="badge must">MUST</span></td>
+    <td><span class="own-k">К</span> / document/</td>
+    <td>Поддерживаемые форматы открываются на просмотр без скачивания, по защищённой ссылке и правам.</td>
+  </tr>
+  <tr>
+    <td class="id">ФТ-18</td>
+    <td>Неизменяемость утверждённых версий (object lock / WORM)</td>
+    <td class="req">REQ-08-004<br><span class="badge derived">выводимое</span></td>
+    <td><span class="badge should">SHOULD</span></td>
+    <td><span class="own-c">Об</span>+<span class="own-k">К</span></td>
+    <td>Утверждённые/опубликованные версии защищены от изменения на уровне хранилища (проверка фичи WORM — на @Hqhzx).</td>
+  </tr>
+
+  <tr class="grp"><td colspan="6">Группа 4. Публикация и доставка заявителю — пакет delivery/</td></tr>
+  <tr>
+    <td class="id">ФТ-19</td>
+    <td>Публикация документа заявителю с профилем видимости</td>
+    <td class="req">REQ-08-010</td>
+    <td><span class="badge must">MUST</span></td>
+    <td><span class="own-k">К</span> / delivery/</td>
+    <td>publish(documentId, applicantId, visibilityProfile) переводит документ в «Направлен заявителю»; публикуется DocumentPublished.</td>
+  </tr>
+  <tr>
+    <td class="id">ФТ-20</td>
+    <td>Проверка visibilityProfile при публикации</td>
+    <td class="req">REQ-08-010<br><span class="badge derived">выводимое</span></td>
+    <td><span class="badge must">MUST</span></td>
+    <td><span class="own-k">К</span> / delivery/</td>
+    <td>Внутренние комментарии/служебные решения/закрытые материалы не попадают в кабинет; профиль видимости валидируется перед выдачей.</td>
+  </tr>
+  <tr>
+    <td class="id">ФТ-21</td>
+    <td>Отображение результата в личном кабинете заявителя</td>
+    <td class="req">REQ-08-010</td>
+    <td><span class="badge must">MUST</span></td>
+    <td><span class="own-k">К</span> / delivery/</td>
+    <td>Заявитель видит опубликованный документ; getPublishedDocuments(applicantId, businessKey) отдаёт доступный перечень.</td>
+  </tr>
+  <tr>
+    <td class="id">ФТ-22</td>
+    <td>Регистрация DeliveryReceipt: доставлен / открыт / скачан</td>
+    <td class="req">REQ-08-011</td>
+    <td><span class="badge should">SHOULD</span></td>
+    <td><span class="own-k">К</span> / delivery/</td>
+    <td>Фиксируются receiptType, occurredAt, ipHash, userAgentHash; document-service хранит факт как документарный, событие формирует cabinet-service.</td>
+  </tr>
+
+  <tr class="grp"><td colspan="6">Группа 5. Связи документа — пакет link/</td></tr>
+  <tr>
+    <td class="id">ФТ-23</td>
+    <td>Создание связи документа с бизнес-объектом (заявка/дело/карта/отчёт/маршрут)</td>
+    <td class="req">REQ-08-005</td>
+    <td><span class="badge must">MUST</span></td>
+    <td><span class="own-a">А</span> / link/</td>
+    <td>createDocumentLink(documentId, linkType, targetId); связь создаётся идемпотентно, факт — в аудите и событии DocumentLinkCreated.</td>
+  </tr>
+  <tr>
+    <td class="id">ФТ-24</td>
+    <td>Каталог типов связей + поле relatedEntityType</td>
+    <td class="req">REQ-08-005<br><span class="badge derived">выводимое</span></td>
+    <td><span class="badge must">MUST</span></td>
+    <td><span class="own-a">А</span> / link/</td>
+    <td>linkType: REQUEST, EXPERTISE_CASE, EXPERT_CARD, REPORT, ROUTE, PRIMARY_EXPERTISE. <b>Разрыв MZD-5/MZD-6: ввести явный relatedEntityType, устранить конфликт с relatedEntityType на DocumentCard.</b></td>
+  </tr>
+  <tr>
+    <td class="id">ФТ-25</td>
+    <td>Кардинальность связи M:N</td>
+    <td class="req">REQ-08-005<br><span class="badge derived">выводимое</span></td>
+    <td><span class="badge must">MUST</span></td>
+    <td><span class="own-a">А</span> / link/</td>
+    <td>Один документ может быть связан с несколькими объектами и наоборот. <b>Разрыв MZD-6: M:N задать явно в модели.</b></td>
+  </tr>
+  <tr>
+    <td class="id">ФТ-26</td>
+    <td>Получение связей документа</td>
+    <td class="req">REQ-08-005</td>
+    <td><span class="badge must">MUST</span></td>
+    <td><span class="own-a">А</span> / link/</td>
+    <td>GET связей по documentId и обратный поиск документов по targetId/linkType.</td>
+  </tr>
+
+  <tr class="grp"><td colspan="6">Группа 6. Реестры и нумерация — пакет registry/</td></tr>
+  <tr>
+    <td class="id">ФТ-27</td>
+    <td>Генерация регистрационного номера документа</td>
+    <td class="req">REQ-08-006</td>
+    <td><span class="badge must">MUST</span></td>
+    <td><span class="own-a">А</span> / registry/</td>
+    <td>При регистрации присваивается номер по формату журнала; повтор по idempotencyKey не выдаёт новый номер.</td>
+  </tr>
+  <tr>
+    <td class="id">ФТ-28</td>
+    <td>Регистрационные журналы</td>
+    <td class="req">REQ-08-006</td>
+    <td><span class="badge must">MUST</span></td>
+    <td><span class="own-a">А</span> / registry/</td>
+    <td>Журнал хранит последовательность номеров с датой, типом, автором; доступен для просмотра по правам.</td>
+  </tr>
+  <tr>
+    <td class="id">ФТ-29</td>
+    <td>Гарантия уникальности номера (SELECT FOR UPDATE)</td>
+    <td class="req">REQ-08-006<br><span class="badge derived">выводимое</span></td>
+    <td><span class="badge must">MUST</span></td>
+    <td><span class="own-a">А</span> / registry/</td>
+    <td>Конкурентная выдача номеров сериализуется, дублей нет. <b>Открытый вопрос MZD-6: безразрывность (gapless) vs допущение пропусков — согласовать со стейкхолдером.</b></td>
+  </tr>
+
+  <tr class="grp"><td colspan="6">Группа 7. Маршруты ЭДО и статусная модель — пакет routing/</td></tr>
+  <tr>
+    <td class="id">ФТ-30</td>
+    <td>Создание маршрута согласования (DocumentRoute)</td>
+    <td class="req">REQ-08-007</td>
+    <td><span class="badge must">MUST</span></td>
+    <td><span class="own-a">А</span> / routing/</td>
+    <td>startDocumentRoute(documentId, routeTemplateId, participants); маршрут переводит документ в «На согласовании» при наличии routeId.</td>
+  </tr>
+  <tr>
+    <td class="id">ФТ-31</td>
+    <td>Задачи исполнителям (RouteTask) и фиксация решений</td>
+    <td class="req">REQ-08-007</td>
+    <td><span class="badge must">MUST</span></td>
+    <td><span class="own-a">А</span> / routing/</td>
+    <td>completeRouteTask(documentId, taskId, decision, comment); решения согласующих сохраняются с автором и временем.</td>
+  </tr>
+  <tr>
+    <td class="id">ФТ-32</td>
+    <td>Движение статуса документа по маршруту</td>
+    <td class="req">REQ-08-007</td>
+    <td><span class="badge must">MUST</span></td>
+    <td><span class="own-a">А</span> / routing/</td>
+    <td>Положительное завершение → «Утверждён»; отклонение → «Требуется замена»; переходы только в рамках разрешённой матрицы.</td>
+  </tr>
+  <tr>
+    <td class="id">ФТ-33</td>
+    <td>Тип-специфичные конечные автоматы статусов (5 типов × 8 статусов)</td>
+    <td class="req">REQ-08-007<br><span class="badge derived">выводимое</span></td>
+    <td><span class="badge must">MUST</span></td>
+    <td><span class="own-a">А</span> / routing/</td>
+    <td>Применимость статусов различается по типам (матрица раздела 8 проекта интеграций), а не единый линейный ЖЦ. <b>Повторяющийся разрыв — зафиксировать матрицу применимости и переходы.</b></td>
+  </tr>
+  <tr>
+    <td class="id">ФТ-34</td>
+    <td>Протокол смены статуса DocumentCard через границу пакетов routing↔document</td>
+    <td class="req">REQ-08-007<br><span class="badge derived">выводимое</span></td>
+    <td><span class="badge must">MUST</span></td>
+    <td><span class="own-a">А</span>+<span class="own-k">К</span></td>
+    <td>Явный внутренний контракт изменения статуса карточки из routing. <b>Разрыв MZD-6: протокол не определён — согласовать между владельцами пакетов.</b></td>
+  </tr>
+  <tr>
+    <td class="id">ФТ-35</td>
+    <td>Идемпотентная команда смены статуса документа</td>
+    <td class="req">REQ-08-007</td>
+    <td><span class="badge must">MUST</span></td>
+    <td><span class="own-a">А</span> / routing/</td>
+    <td>POST status с idempotencyKey; повтор не меняет состояние второй раз; фиксируются previousStatus/newStatus/reasonCode.</td>
+  </tr>
+
+  <tr class="grp"><td colspan="6">Группа 8. События и интеграции — пакет integration/</td></tr>
+  <tr>
+    <td class="id">ФТ-36</td>
+    <td>Публикация минимального набора событий (DocumentUploaded, DocumentAccepted, DocumentPublished)</td>
+    <td class="req">REQ-08-012</td>
+    <td><span class="badge must">MUST</span></td>
+    <td><span class="own-a">А</span> / integration/</td>
+    <td>События публикуются по согласованной схеме, содержат correlationId, корректно обрабатываются потребителем.</td>
+  </tr>
+  <tr>
+    <td class="id">ФТ-37</td>
+    <td>Transactional Outbox: событие в одной транзакции с изменением данных, поллер → Kafka</td>
+    <td class="req">REQ-08-012</td>
+    <td><span class="badge must">MUST</span></td>
+    <td><span class="own-a">А</span> / integration/</td>
+    <td>При успешной транзакции событие не теряется; publish идёт только через outbox.</td>
+  </tr>
+  <tr>
+    <td class="id">ФТ-38</td>
+    <td>Единый envelope: eventId, eventType, eventVersion, correlationId, causationId, businessKey</td>
+    <td class="req">REQ-08-012</td>
+    <td><span class="badge must">MUST</span></td>
+    <td><span class="own-a">А</span> / integration/</td>
+    <td>Все события содержат единый конверт и версию схемы; схема публикуется в реестре (AsyncAPI/Schema Registry).</td>
+  </tr>
+  <tr>
+    <td class="id">ФТ-39</td>
+    <td>Явное отображение переходов статусов → события</td>
+    <td class="req">REQ-08-012<br><span class="badge derived">выводимое</span></td>
+    <td><span class="badge must">MUST</span></td>
+    <td><span class="own-a">А</span> / integration/</td>
+    <td>Задан маппинг «переход статуса → событие», а не публикация на каждое изменение. <b>Принцип: без blanket fire-on-every-change.</b></td>
+  </tr>
+  <tr>
+    <td class="id">ФТ-40</td>
+    <td>Расширенный каталог событий (TechnicalCheckPassed/Failed, VersionCreated, LinkCreated, ApprovalRequested, RejectedByApprover, PublicationFailed, DeliveryReceiptRegistered, Archived)</td>
+    <td class="req">REQ-08-012<br><span class="badge derived">выводимое</span></td>
+    <td><span class="badge should">SHOULD</span></td>
+    <td><span class="own-a">А</span> / integration/</td>
+    <td>Каталог из раздела 6 проекта интеграций. <b>Требует подтверждения стейкхолдера ТЗ — перечень базового ТЗ не исчерпывающий.</b></td>
+  </tr>
+  <tr>
+    <td class="id">ФТ-41</td>
+    <td>Потребление входящих событий соседних сервисов (consumer)</td>
+    <td class="req">REQ-08-012<br><span class="badge derived">выводимое</span></td>
+    <td><span class="badge must">MUST</span></td>
+    <td><span class="own-a">А</span> / integration/</td>
+    <td>Consumer-ы для request/expertise/review/report/cabinet/workflow. <b>Разрыв MZD-6: inbound-слой полностью отсутствовал.</b></td>
+  </tr>
+  <tr>
+    <td class="id">ФТ-42</td>
+    <td>Вызовы соседних сервисов через WebClient/Feign (проверка контекста)</td>
+    <td class="req">REQ-08-012<br><span class="badge derived">выводимое</span></td>
+    <td><span class="badge must">MUST</span></td>
+    <td><span class="own-a">А</span> / integration/</td>
+    <td>validate*Context(...) к соседям с timeout/retry/circuit breaker; прямой доступ к чужой БД запрещён.</td>
+  </tr>
+  <tr>
+    <td class="id">ФТ-43</td>
+    <td>Идемпотентность consumer-ов (dedup по eventId)</td>
+    <td class="req">REQ-08-012<br><span class="badge derived">выводимое</span></td>
+    <td><span class="badge must">MUST</span></td>
+    <td><span class="own-a">А</span> / integration/</td>
+    <td>Обработанные eventId хранятся; дубль не приводит к повторному действию.</td>
+  </tr>
+  <tr>
+    <td class="id">ФТ-44</td>
+    <td>DLQ, consumer retry и ручной replay</td>
+    <td class="req">REQ-08-012<br><span class="badge derived">выводимое</span></td>
+    <td><span class="badge should">SHOULD</span></td>
+    <td><span class="own-a">А</span>+<span class="own-c">Об</span></td>
+    <td>После исчерпания retry сообщение уходит в DLQ с диагностикой; поддержан ручной replay (раздел 11 ТЗ: retry/outbox/DLQ).</td>
+  </tr>
+
+  <tr class="grp"><td colspan="6">Группа 9. Сквозные требования — разделы 3, 9, 10, 11 ТЗ</td></tr>
+  <tr>
+    <td class="id">ФТ-45</td>
+    <td>Журнал аудита всех изменений</td>
+    <td class="req">разд. 10<br><span class="badge derived">выводимое</span></td>
+    <td><span class="badge must">MUST</span></td>
+    <td><span class="own-c">Об</span></td>
+    <td>Изменения статусов, реквизитов, файлов, маршрутов и прав фиксируются с автором и временем (входит в DoD каждой задачи).</td>
+  </tr>
+  <tr>
+    <td class="id">ФТ-46</td>
+    <td>Ролевая и атрибутная модель доступа</td>
+    <td class="req">разд. 3, 10<br><span class="badge derived">выводимое</span></td>
+    <td><span class="badge must">MUST</span></td>
+    <td><span class="own-c">Об</span></td>
+    <td>Доступ по роли и атрибутам (организация, статус процесса, принадлежность к делу); проверка на уровне сервиса.</td>
+  </tr>
+  <tr>
+    <td class="id">ФТ-47</td>
+    <td>Проверка токенов JWT (OAuth2 Resource Server), защита на gateway и сервисе</td>
+    <td class="req">разд. 10<br><span class="badge derived">выводимое</span></td>
+    <td><span class="badge must">MUST</span></td>
+    <td><span class="own-c">Об</span></td>
+    <td>Все межсервисные и пользовательские вызовы — по защищённому каналу с проверкой токена и прав.</td>
+  </tr>
+  <tr>
+    <td class="id">ФТ-48</td>
+    <td>Поиск / фильтрация / сортировка / пагинация / сохранённые представления</td>
+    <td class="req">разд. 9<br><span class="badge derived">выводимое</span></td>
+    <td><span class="badge must">MUST</span></td>
+    <td><span class="own-c">Об</span> (@NITF1S)</td>
+    <td>UI по OpenAPI-контракту бэкенда; списки поддерживают пагинацию и массовые действия в пределах прав.</td>
+  </tr>
+  <tr>
+    <td class="id">ФТ-49</td>
+    <td>Наблюдаемость: health/readiness, метрики, трейсинг</td>
+    <td class="req">разд. 11<br><span class="badge derived">выводимое</span></td>
+    <td><span class="badge must">MUST</span></td>
+    <td><span class="own-c">Об</span> (@Hqhzx)</td>
+    <td>Actuator health/readiness, Micrometer+Prometheus, OpenTelemetry; в логах и трассировке — correlationId.</td>
+  </tr>
+  <tr>
+    <td class="id">ФТ-50</td>
+    <td>Отказоустойчивость: retry, outbox, DLQ, отсутствие потери данных</td>
+    <td class="req">разд. 11<br><span class="badge derived">выводимое</span></td>
+    <td><span class="badge must">MUST</span></td>
+    <td><span class="own-c">Об</span>+<span class="own-a">А</span></td>
+    <td>Сбой внешнего сервиса/потребителя не приводит к потере данных; целевые настройки timeout/retry/circuit breaker зафиксированы.</td>
+  </tr>
+
+  </tbody>
+</table>
+
+<h2>3. Обратное покрытие: REQ-08-XXX → ФТ</h2>
+<table class="grid cov">
+  <thead>
+    <tr>
+      <th style="width:14%">REQ-08</th>
+      <th style="width:34%">Формулировка ТЗ</th>
+      <th style="width:9%">Пр-т</th>
+      <th style="width:43%">Покрывающие ФТ</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr><td class="reqid">REQ-08-001</td><td>Множественная загрузка документов</td><td><span class="badge must">MUST</span></td><td>ФТ-01, ФТ-02, ФТ-15</td></tr>
+    <tr><td class="reqid">REQ-08-002</td><td>Техническая и антивирусная проверка файла</td><td><span class="badge must">MUST</span></td><td>ФТ-03, ФТ-04, ФТ-05, ФТ-06, ФТ-07</td></tr>
+    <tr><td class="reqid">REQ-08-003</td><td>Карточка документа и реквизиты</td><td><span class="badge must">MUST</span></td><td>ФТ-08, ФТ-09, ФТ-10, ФТ-11</td></tr>
+    <tr><td class="reqid">REQ-08-004</td><td>Версии без перезаписи старого файла</td><td><span class="badge must">MUST</span></td><td>ФТ-05, ФТ-12, ФТ-13, ФТ-14, ФТ-18</td></tr>
+    <tr><td class="reqid">REQ-08-005</td><td>Связь документа с заявкой/делом/картой/отчётом/маршрутом</td><td><span class="badge must">MUST</span></td><td>ФТ-23, ФТ-24, ФТ-25, ФТ-26</td></tr>
+    <tr><td class="reqid">REQ-08-006</td><td>Регистрационные журналы и нумераторы</td><td><span class="badge must">MUST</span></td><td>ФТ-27, ФТ-28, ФТ-29</td></tr>
+    <tr><td class="reqid">REQ-08-007</td><td>Маршрут согласования и утверждения</td><td><span class="badge must">MUST</span></td><td>ФТ-30, ФТ-31, ФТ-32, ФТ-33, ФТ-34, ФТ-35</td></tr>
+    <tr><td class="reqid">REQ-08-008</td><td>Предпросмотр файлов в браузере</td><td><span class="badge must">MUST</span></td><td>ФТ-17</td></tr>
+    <tr><td class="reqid">REQ-08-009</td><td>Защищённые временные ссылки</td><td><span class="badge should">SHOULD</span></td><td>ФТ-16</td></tr>
+    <tr><td class="reqid">REQ-08-010</td><td>Публикация документа заявителю</td><td><span class="badge must">MUST</span></td><td>ФТ-19, ФТ-20, ФТ-21</td></tr>
+    <tr><td class="reqid">REQ-08-011</td><td>Delivery receipt: доставлен, открыт, скачан</td><td><span class="badge should">SHOULD</span></td><td>ФТ-22</td></tr>
+    <tr><td class="reqid">REQ-08-012</td><td>События DocumentUploaded, DocumentAccepted, DocumentPublished</td><td><span class="badge must">MUST</span></td><td>ФТ-36, ФТ-37, ФТ-38, ФТ-39, ФТ-40, ФТ-41, ФТ-42, ФТ-43, ФТ-44</td></tr>
+    <tr><td class="reqid">Сквозные</td><td>Аудит, безопасность, UI, НФТ (разделы 3, 9, 10, 11)</td><td><span class="badge derived">выводимое</span></td><td>ФТ-45, ФТ-46, ФТ-47, ФТ-48, ФТ-49, ФТ-50</td></tr>
+  </tbody>
+</table>
+<p class="sub">Каждое из REQ-08-001 … REQ-08-012 покрыто хотя бы одним ФТ. Пробелов в покрытии нет.</p>
+
+<h2>4. Открытые вопросы (согласовать до реализации)</h2>
+<div class="note">
+Требования с меткой «выводимое» и позиции ниже реконструированы из доменной логики и проекта интеграций v0.1; раздел 8 ТЗ по обмену задан шаблонной формулировкой и подлежит формальному уточнению у стейкхолдера ТЗ:
+<ul>
+  <li>Нумерация (ФТ-29): безразрывная (gapless) или с допустимыми пропусками.</li>
+  <li>Матрица применимости статусов (ФТ-33): охват «На проверке» (только комплектность координатора или также тех/АВ-проверка); статусы для «служебной резолюции»; отдельный маршрут «экспертной карты»; применимость «Направлен заявителю» за пределами итогового заключения.</li>
+  <li>Расширенный каталог событий (ФТ-40) и содержание межсервисного обмена (ФТ-41, ФТ-42): подтвердить перечень, инициатора, направление и состав данных по каждому смежному сервису.</li>
+  <li>Границы области: не втягивать в document-service содержательную часть, принадлежащую другим сервисам (экспертные выводы, комплектность как расчёт, маршрут как сущность workflow).</li>
+</ul>
+</div>
+
+</body>
+</html>
