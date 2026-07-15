@@ -19,7 +19,7 @@
 | 2 | Файлы и версии | `FileVersion`: загрузка (init/complete), SHA-256, versionNumber, отсутствие перезаписи старых файлов (WORM) |
 | 3 | Технические проверки | MIME по содержимому (Apache Tika), лимит размера, антивирус (ClamAV), карантин |
 | 4 | Объектное хранилище | S3-совместимое (RustFS/MinIO) через AWS SDK v2: bucket/prefix policy, versioning, presigned URL, TTL |
-| 5 | Связи | `DocumentLink`: M:N, `linkType` ∈ {REQUEST, EXPERTISE_CASE, EXPERTISE_CARD, REPORT, ROUTE, PRIMARY_EXPERTISE}, идемпотентное создание |
+| 5 | Связи | `DocumentLink`: M:N, `linkType` ∈ {REQUEST, EXPERTISE_CASE, EXPERT_CARD, REVIEW, PRIMARY_EXPERTISE, REPORT, ROUTE} (SPEC-13 §2.2), идемпотентное создание |
 | 6 | Нумерация | Регистрационные журналы и нумераторы, генерация номера по `idempotencyKey` |
 | 7 | ЭДО | `DocumentRoute`, `RouteTask`: маршрут согласования, задачи, приём команд workflow-service |
 | 8 | Статусная модель | Владение полем `status` документа, тип-специфичные стейт-машины, матрица разрешённых переходов, `reasonCode` |

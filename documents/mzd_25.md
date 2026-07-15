@@ -28,7 +28,7 @@
 | Недоступность смежного сервиса | 503 |
 
 **Статусы документа (MZD-22 / SPEC-13):** `DRAFT`, `UNDER_REVIEW`, `ACCEPTED`, `REPLACEMENT_REQUIRED`, `UNDER_APPROVAL`, `APPROVED`, `PUBLISHED`, `ARCHIVED`.
-**Статус файла (ФТ-07):** `SCANNING`, `CLEAN`, `INFECTED`.
+**Статус файла (ФТ-07, MZD-16):** `NEW`, `UPLOADED`, `CHECKING`, `CLEAN`, `INFECTED`, `INVALID`.
 **Kafka-топология:** топик-на-сервис-продюсер (`document.events.v1`, `request.events.v1`, …).
 
 ---

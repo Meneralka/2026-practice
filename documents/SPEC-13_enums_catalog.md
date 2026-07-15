@@ -37,7 +37,7 @@
 | Код | Подпись (ТЗ) | Смысл | Инициаторы перехода |
 |---|---|---|---|
 | `DRAFT` | Черновик | Файл загружен, не включён в завершённое действие | document-service / сервис-источник |
-| `UNDER_REVIEW` | На проверке | Техническая/АВ-проверка либо проверка комплектности | document-service, request-, expertise-, review-service |
+| `UNDER_REVIEW` | На проверке | Ручная проверка комплектности/содержания. Автопроверки файла (Tika, размер, SHA-256, ClamAV) живут внутри `DRAFT` и отражаются в `FileVersion.status` (Q-1, close-questions) | document-service, request-, expertise-, review-service |
 | `ACCEPTED` | Принят | Документ включён в материалы дела | request-, expertise-, review-, document-service |
 | `REPLACEMENT_REQUIRED` | Требуется замена | Отклонён с замечанием, нужна новая версия | request-, expertise-, review-, workflow-service |
 | `UNDER_APPROVAL` | На согласовании | Проходит маршрут ЭДО | workflow-, report-, document-service |
