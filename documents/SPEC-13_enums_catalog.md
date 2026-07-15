@@ -42,7 +42,7 @@
 | `REPLACEMENT_REQUIRED` | Требуется замена | Отклонён с замечанием, нужна новая версия | request-, expertise-, review-, workflow-service |
 | `UNDER_APPROVAL` | На согласовании | Проходит маршрут ЭДО | workflow-, report-, document-service |
 | `APPROVED` | Утверждён | Маршрут завершён положительно | workflow-service |
-| `SENT_TO_APPLICANT` | Направлен заявителю | Опубликован в ЛК по профилю видимости | report-, cabinet-, document-service |
+| `PUBLISHED` | Направлен заявителю | Опубликован в ЛК по профилю видимости | report-, cabinet-, document-service |
 | `ARCHIVED` | Архив | Закрыт для изменений, доступен только на просмотр | workflow-, document-, report-service |
 
 Матрица применимости «5 типов × 8 статусов» и разрешённые переходы — приложение А. Она нужна на компиляции стейт-машины в `routing/` (ФТ-33) и на валидации `POST /documents/{id}/status`.
@@ -69,7 +69,7 @@
 | `APPLICANT_RESULT` | Результат заявителю | Заявитель видит в ЛК: `EXPERT_CONCLUSION` после публикации |
 | `APPLICANT_REQUEST_MATERIAL` | Материалы заявителя | Заявитель видит собственные загруженные материалы заявки |
 
-Инвариант (проверять в коде, а не только в ревью): `documentType == SERVICE_RESOLUTION` ⇒ `visibilityProfile == INTERNAL` и переход в `SENT_TO_APPLICANT` запрещён.
+Инвариант (проверять в коде, а не только в ревью): `documentType == SERVICE_RESOLUTION` ⇒ `visibilityProfile == INTERNAL` и переход в `PUBLISHED` запрещён.
 
 ### 2.2. LinkType — тип связи документа с бизнес-объектом (REQ-08-005, ФТ-24) — 7 значений
 
@@ -129,25 +129,26 @@
 
 Всё в этом разделе — реконструкция; помечать в PR как «выводимое», выносить на согласование.
 
-### 3.1. FileCheckStatus — результат проверок версии файла (закрывает разрыв MZD-5)
+### 3.1. FileVersionStatus — статус версии файла (MZD-16 / SPEC-02)
 
-MZD-5 оставил `FileVersion.status` без enum, с пересечением с `checkResult` и `isCurrent`. Разводим семантику на три независимых поля:
+MZD-5 оставил `FileVersion.status` без enum, с пересечением с `checkResult` и `isCurrent`. Семантика разведена на три независимых поля (решение зафиксировано в MZD-16, согласовано с @ArtemKvvs):
 
 | Поле | Тип | Смысл |
 |---|---|---|
-| `FileVersion.checkStatus` | `FileCheckStatus` | Результат технической/АВ-проверки **этой версии** |
+| `FileVersion.status` | `FileVersionStatus` | Стадия конвейера обработки и результат технической/АВ-проверки **этой версии**. Статуса ЭДО на `FileVersion` нет |
 | `DocumentCard.actualFileVersionId` | UUID | Актуальность версии. Отдельного `isCurrent` на `FileVersion` **нет** — иначе два источника истины |
-| `DocumentCard.status` | `DocumentStatus` | Статус документооборота. На `FileVersion` статуса ЭДО **нет** |
+| `DocumentCard.status` | `DocumentStatus` | Статус документооборота |
 
-`FileCheckStatus` — 5 значений:
+`FileVersionStatus` — 6 значений (MZD-16 §1):
 
 | Код | Смысл |
 |---|---|
-| `PENDING` | Загружена, проверки ещё не выполнялись |
-| `IN_PROGRESS` | Проверки выполняются (Tika/размер/ClamAV) |
-| `PASSED` | Все проверки пройдены |
-| `FAILED` | Проверка не пройдена, `reasonCode` заполнен |
-| `QUARANTINED` | Изолирована (заражение / подозрительный контент), карантинный бакет, ФТ-07 |
+| `NEW` | Запись создана на фазе `/uploads/init`, бинарный файл в хранилище ещё не передан |
+| `UPLOADED` | Файл загружен в S3-карантин, `/uploads/complete` выполнен, синхронные проверки пройдены |
+| `CHECKING` | Асинхронные проверки выполняются (Tika / размер / SHA-256 / ClamAV) |
+| `CLEAN` | Все проверки пройдены, файл перемещён в `main-bucket` |
+| `INFECTED` | Обнаружено вредоносное ПО; файл изолирован и удалён (карантин, ФТ-07), `reasonCode = ANTIVIRUS_INFECTED` |
+| `INVALID` | Провал технической валидации (MIME-подмена, размер, hash), `reasonCode` заполнен |
 
 ### 3.2. CheckType — вид проверки файла (REQ-08-002)
 
@@ -287,7 +288,7 @@ public enum DocumentStatus {
     REPLACEMENT_REQUIRED("Требуется замена"),
     UNDER_APPROVAL("На согласовании"),
     APPROVED("Утверждён"),
-    SENT_TO_APPLICANT("Направлен заявителю"),
+    PUBLISHED("Направлен заявителю"),
     ARCHIVED("Архив");
 
     private final String label;
@@ -299,7 +300,7 @@ public enum DocumentStatus {
 }
 ```
 
-Остальные по той же схеме: `VisibilityProfile`, `LinkType`, `ReceiptType`, `ReasonCode`, `FileCheckStatus`, `CheckType`, `SecureLinkAction`, `RouteStatus`, `RouteTaskStatus`, `RouteDecision`, `RegistryCode`, `ActorType`, `ConfidentialityLevel`, `OutboxStatus`, `DocumentEventType`.
+Остальные по той же схеме: `VisibilityProfile`, `LinkType`, `ReceiptType`, `ReasonCode`, `FileVersionStatus`, `CheckType`, `SecureLinkAction`, `RouteStatus`, `RouteTaskStatus`, `RouteDecision`, `RegistryCode`, `ActorType`, `ConfidentialityLevel`, `OutboxStatus`, `DocumentEventType`.
 
 Применимость статусов по типам и переходы **не хардкодим в enum** — это конфигурация стейт-машины в `routing/` (`StatusTransitionPolicy`), таблицы приложений А и Б. Enum отвечает только за перечень значений.
 
@@ -309,7 +310,7 @@ public enum DocumentStatus {
 ALTER TABLE document_card
     ADD CONSTRAINT chk_document_status CHECK (
         status IN ('DRAFT','UNDER_REVIEW','ACCEPTED','REPLACEMENT_REQUIRED',
-                   'UNDER_APPROVAL','APPROVED','SENT_TO_APPLICANT','ARCHIVED')
+                   'UNDER_APPROVAL','APPROVED','PUBLISHED','ARCHIVED')
     );
 ```
 
@@ -324,15 +325,15 @@ ALTER TABLE document_card
 | Статус | Материалы заявки | Экспертная карта | Экспертное заключение | Сравнит. протокол | Служебная резолюция |
 |---|:--:|:--:|:--:|:--:|:--:|
 | DRAFT | ✓ | ✓ | ✓ | ✓ | ✓ |
-| UNDER_REVIEW | ✓ | ✓ | ✓ | ✓ | ? |
-| ACCEPTED | ✓ | ✓ | ? | ✓ | — |
+| UNDER_REVIEW | ✓ | ✓ | ✓ | ✓ | — |
+| ACCEPTED | ✓ | ✓ | ✓ | ✓ | — |
 | REPLACEMENT_REQUIRED | ✓ | ✓ | ✓ | ✓ | — |
 | UNDER_APPROVAL | — | ✓ | ✓ | ✓ | ✓ |
 | APPROVED | — | ✓ | ✓ | ✓ | ✓ |
-| SENT_TO_APPLICANT | — | ? | ✓ | — | — |
+| PUBLISHED | — | — | ✓ | — | — |
 | ARCHIVED | ✓ | ✓ | ✓ | ✓ | ✓ |
 
-Открытые «?»: `ACCEPTED` для заключения (промежуточная отметка технической приёмки или нет); `UNDER_REVIEW` для резолюции (если «На проверке» включает автоматическую тех./АВ-проверку — статус применим ко всем пяти типам, поскольку файл проверяется всегда); `SENT_TO_APPLICANT` для экспертной карты (только по отдельному решению о включении в пакет публикации).
+Бывшие «?» закрыты решениями MZD-22: `ACCEPTED` для заключения — обязательный шаг единого шаблона переходов (MZD-22 §2.3); `UNDER_REVIEW` для резолюции — исключён guard'ом, техническая/АВ-проверка файла идёт на уровне `FileVersion.status` без смены статуса карточки (MZD-22 §2.5, MZD-16 §3); `PUBLISHED` для экспертной карты — исключён из графа окончательно (MZD-22 §2.2, SPEC-01).
 
 ## Приложение Б. Маппинг «переход статуса → событие» (ФТ-39)
 
@@ -340,14 +341,14 @@ ALTER TABLE document_card
 |---|---|
 | создана карточка загрузки | `DocumentUploadInitiated` |
 | файл в хранилище, создана FileVersion | `DocumentUploaded` (+ `DocumentVersionCreated`, если versionNumber > 1) |
-| checkStatus → PASSED | `DocumentTechnicalCheckPassed` |
-| checkStatus → FAILED / QUARANTINED | `DocumentTechnicalCheckFailed` |
+| `FileVersion.status` → CLEAN | `DocumentTechnicalCheckPassed` |
+| `FileVersion.status` → INFECTED / INVALID | `DocumentTechnicalCheckFailed` |
 | создан DocumentLink | `DocumentLinkCreated` |
 | → ACCEPTED | `DocumentAccepted` |
 | → REPLACEMENT_REQUIRED | `DocumentReplacementRequested` (+ `DocumentRejectedByApprover`, если инициатор — согласующий) |
 | → UNDER_APPROVAL | `DocumentApprovalRequested` |
 | → APPROVED | `DocumentApproved` |
-| → SENT_TO_APPLICANT | `DocumentPublished` |
+| → PUBLISHED | `DocumentPublished` |
 | публикация не выполнена | `DocumentPublicationFailed` |
 | зарегистрирована квитанция | `DocumentDeliveryReceiptRegistered` |
 | → ARCHIVED | `DocumentArchived` |
@@ -355,10 +356,10 @@ ALTER TABLE document_card
 
 ## Приложение В. Чек-лист сверки (Definition of Done SPEC-13)
 
-- [ ] @koshak1030: `DocumentType`, `DocumentStatus`, `FileCheckStatus`, `CheckType`, `SecureLinkAction`, `VisibilityProfile`, `ReceiptType`, технические и delivery-`ReasonCode` — расхождений с `document/`, `delivery/` нет
+- [ ] @koshak1030: `DocumentType`, `DocumentStatus`, `FileVersionStatus`, `CheckType`, `SecureLinkAction`, `VisibilityProfile`, `ReceiptType`, технические и delivery-`ReasonCode` — расхождений с `document/`, `delivery/` нет
 - [ ] @ArtemKvvs: `LinkType`, `RegistryCode`, `RouteStatus`, `RouteTaskStatus`, `RouteDecision`, `DocumentEventType`, `OutboxStatus`, routing-`ReasonCode` — расхождений с `link/`, `registry/`, `routing/`, `integration/` нет
 - [ ] Оба: `relatedEntityType` на `DocumentCard` не заводим, тип связи = `LinkType` в `DocumentLink`
-- [ ] Оба: `FileVersion` не имеет ни `status` (ЭДО), ни `isCurrent`
+- [ ] Оба: `FileVersion.status` — технический статус конвейера (`FileVersionStatus`, MZD-16); статуса ЭДО и `isCurrent` на версии нет
 - [ ] @Hqhzx: тест «enum ↔ CHECK-констрейнт» в контуре Testcontainers
 - [ ] @NITF1S: подписи берутся из `/dictionaries`, русские строки не хардкодятся
 - [ ] Тимлид: открытые вопросы (gapless-нумерация, «?» в приложении А, каталог событий ФТ-40) вынесены стейкхолдеру
