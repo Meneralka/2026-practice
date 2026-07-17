@@ -8,18 +8,18 @@
 ```json
 {
   "eventId": "UUID",
-  "eventVersion": "1.0.0",
+  "eventVersion": "1.0",
   "eventType": "String",
   "occurredAt": "ISO-8601",
   "producer": "document-service",
   "causationId": "UUID",
   "correlationId": "UUID",
-  "businessKey": "UUID",
+  "businessKey": "STRING (ID заявки/бизнес-процесса, например REQUEST-2026-000123 — НЕ documentId)",
   "payload": {}
 }
 ```
 
-**Ключ партиционирования:** `documentId` для событий документа, `businessKey` для процессных.
+**Ключ партиционирования:** `documentId` для событий документа, `businessKey` для процессных (закрыто стейкхолдер-документом §6.1, «Проект ответа...» v0.1).
 
 ## 2. Инварианты payload (MZD-46)
 

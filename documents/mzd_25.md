@@ -229,9 +229,9 @@
 | Поле | Значение |
 |---|---|
 | REQ / ФТ | **REQ-08-012** (события DocumentUploaded/Accepted/Published) · **SPEC-14** · **MUST** |
-| Позитив | любое публикуемое событие содержит полный envelope: `eventId`, `eventType`, `eventVersion`, `correlationId`, `causationId`, `businessKey`, `payload`; корректно обрабатывается потребителем |
+| Позитив | любое публикуемое событие содержит полный envelope (9 полей): `eventId`, `eventType`, `eventVersion` (формат `MAJOR.MINOR`, напр. `1.0`), `occurredAt`, `producer`, `correlationId`, `causationId`, `businessKey` (ID заявки/процесса, не документа), `payload`; корректно обрабатывается потребителем |
 | Негатив | событие без `correlationId` или с неизвестной major-версией `eventVersion` → consumer отклоняет / не обрабатывает |
-| SCC | схему envelope на producer-verifier (наличие всех 7 полей, тип `eventVersion`) |
+| SCC | схему envelope на producer-verifier (наличие всех 9 полей, формат `eventVersion`) |
 | INT | проброс `correlationId`/`causationId` по цепочке REST → Kafka → consumer |
 
 ---

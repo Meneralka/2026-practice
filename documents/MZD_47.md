@@ -39,7 +39,7 @@
 
 | Поле | Назначение при разборе |
 |---|---|
-| **Исходное сообщение** | Полный envelope: `eventId`, `eventType`, `eventVersion`, `correlationId`, `causationId`, `businessKey`, `payload` |
+| **Исходное сообщение** | Полный envelope (9 полей): `eventId`, `eventType`, `eventVersion`, `occurredAt`, `producer`, `correlationId`, `causationId`, `businessKey` (ID заявки, не документа), `payload` |
 | `errorClass` | Класс исключения — основной признак для классификации причины |
 | `errorMessage` | Текст ошибки |
 | `stackTraceHash` | Хэш стектрейса — группировка однотипных сбоев |

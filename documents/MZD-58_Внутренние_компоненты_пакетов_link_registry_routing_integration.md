@@ -107,13 +107,13 @@
 ```json
 {
   "eventId": "UUID",
-  "eventVersion": "1.0.0",
+  "eventVersion": "1.0",
   "eventType": "DocumentPublished", 
   "occurredAt": "2026-07-17T10:15:00Z",
   "producer": "document-service",
   "causationId": "UUID-родительского-события-команды",
   "correlationId": "UUID-сквозного-процесса",
-  "businessKey": "ID-ключ-карточки-документа",
+  "businessKey": "REQUEST-2026-000123 (ID заявки/бизнес-процесса, НЕ карточки документа)",
   "payload": {
     "fileId": "UUID",
     "mimeType": "application/pdf",

@@ -215,7 +215,7 @@
 
 | ID | Тип | Предусловие | Действие | Ожидаемый результат | Код | Слой |
 |---|---|---|---|---|---|---|
-| ТК-088 | ✅ поз. | Любое событие публикуется | Проверка envelope | Присутствуют все 7 полей: `eventId`, `eventType`, `eventVersion`, `correlationId`, `causationId`, `businessKey`, `payload` | — | SCC |
+| ТК-088 | ✅ поз. | Любое событие публикуется | Проверка envelope | Присутствуют все 9 полей: `eventId`, `eventType`, `eventVersion` (`1.0`), `occurredAt`, `producer`, `correlationId`, `causationId`, `businessKey` (ID заявки, не документа), `payload` | — | SCC |
 | ТК-089 | ✅ поз. | Событие опубликовано в `document.events.v1` | Обработка потребителем | Корректно обработано | — | INT |
 | ТК-090 | ✅ поз. | Цепочка REST → Kafka → consumer | Трассировка | `correlationId` / `causationId` проброшены сквозь | — | INT |
 | ТК-091 | ✅ поз. | Успешная транзакция изменения | Публикация через outbox | Событие **гарантированно** в топике | — | INT |

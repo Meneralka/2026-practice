@@ -31,13 +31,13 @@
 ```json
 {
   "eventId": "UUID",
-  "eventVersion": "1.0.0",
+  "eventVersion": "1.0",
   "eventType": "DocumentUploaded", 
   "occurredAt": "2026-07-12T10:15:00Z",
   "producer": "document-service",
   "causationId": "UUID-родительского-события-команды",
   "correlationId": "UUID-сквозного-процесса",
-  "businessKey": "ID-ключ-карточки-документа",
+  "businessKey": "REQUEST-2026-000123 (ID заявки/бизнес-процесса, НЕ карточки документа — см. стейкхолдер-документ §2.1, §6.1)",
   "payload": {
     "fileId": "UUID",
     "mimeType": "application/pdf",
